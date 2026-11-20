@@ -29,6 +29,8 @@ https://codeforces.com/contest/2113/problem/B
 
 Blank lines and lines starting with `#` are ignored. Both `codeforces.com` and `codeforces.me` links are supported.
 
+`Try using codeforces.me, most of the time codeforces.com fails`
+
 Run the generator from the project directory:
 
 ```bash

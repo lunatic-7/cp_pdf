@@ -1,3 +1,7 @@
+# Generated PDFs
+output/
+*.pdf
+
 # Personal progress list
 completed_problems.txt
 

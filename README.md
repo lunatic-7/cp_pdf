@@ -42,4 +42,4 @@ The output is written to:
 - `codeforces_problems.pdf` — all successfully generated problems, in input order
 - `output/` — one PDF per problem
 
-The script prints failed URLs as they occur and shows success and failure counts at the end. Generated PDFs and the virtual environment are excluded from Git by `.gitignore`.
+The script prints failed URLs as they occur and shows success and failure counts at the end. The local `completed_problems.txt` file and virtual environment are excluded from Git by `.gitignore`.

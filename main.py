@@ -81,34 +81,24 @@ async def wait_for_rendering(page):
         timeout=30000
     )
 
-    # Wait for MathJax to finish, if present.
-    try:
-        await page.wait_for_function("""
-            () => {
+    # Codeforces first shows $$$...$$$ source, then renders it with MathJax.
+    # A processing message can disappear before the formulas are ready.
+    await page.wait_for_function("""
+        () => {
+            const statement = document.querySelector('.problem-statement');
+            if (!statement || statement.innerText.includes('$$$')) return false;
 
-                if (window.MathJax) {
-
-                    if (window.MathJax.startup &&
-                        window.MathJax.startup.promise) {
-                        return window.MathJax.startup.promise
-                            .then(() => true);
-                    }
-                }
-
-                const processing =
-                    document.querySelector(
-                        '#MathJax_Message'
-                    );
-
-                return !processing ||
-                    !processing.textContent.includes(
-                        'Processing math'
-                    );
-            }
-        """, timeout=20000)
-
-    except Exception:
-        print("MathJax wait timed out. Continuing...")
+            const sources = statement.querySelectorAll('script[type^="math/tex"]');
+            const rendered = statement.querySelectorAll('.MathJax, mjx-container');
+            return rendered.length >= sources.length &&
+                Array.from(rendered).every(element => {
+                    const rect = element.getBoundingClientRect();
+                    return !element.classList.contains('MathJax_Processing') &&
+                        getComputedStyle(element).visibility === 'visible' &&
+                        rect.width > 0 && rect.height > 0;
+                });
+        }
+    """, timeout=30000)
 
     # Wait for fonts and images.
     await page.evaluate("""
@@ -142,6 +132,10 @@ async def wait_for_rendering(page):
                     });
                 })
             );
+
+            if (images.some(img => img.naturalWidth === 0)) {
+                throw new Error('A problem statement image failed to load');
+            }
         }
     """)
 
@@ -212,6 +206,14 @@ async def clean_page(page):
             max-width: 100% !important;
             margin: 0 auto !important;
             padding: 0 !important;
+            font-size: 15px !important;
+            font-weight: 500 !important;
+            line-height: 1.45 !important;
+        }
+
+        .problem-statement .MathJax,
+        .problem-statement mjx-container {
+            font-size: 108% !important;
         }
 
         @media print {
@@ -270,7 +272,9 @@ async def clean_page(page):
                 '#MathJax_Message',
                 '.MathJax_Message',
                 '.MathJax_Processing',
-                '.MathJax_Processing_Message'
+                '.MathJax_Processing_Message',
+
+                '.input-output-copier'
 
             ];
 
